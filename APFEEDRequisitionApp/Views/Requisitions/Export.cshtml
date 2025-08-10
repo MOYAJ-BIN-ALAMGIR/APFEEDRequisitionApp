@@ -1,5 +1,10 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewData["Title"] = "Export Data";
 }
+
+<h2>Export Data</h2>
+
+<div class="mb-3">
+    <a asp-action="ExportExcel" class="btn btn-success">Export to Excel</a>
+    <a asp-action="ExportPdf" class="btn btn-danger">Export to PDF</a>
+</div>
