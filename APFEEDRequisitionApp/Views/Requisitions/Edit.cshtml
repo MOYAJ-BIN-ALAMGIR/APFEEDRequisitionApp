@@ -1,0 +1,52 @@
+﻿@model APFEEDRequisitionApp.Models.Requisition
+
+@{
+    ViewData["Title"] = "Edit Requisition";
+}
+
+<h2>Edit Requisition</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="ReferenceNo" class="form-label"></label>
+        <input asp-for="ReferenceNo" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="RequisitionDate" class="form-label"></label>
+        <input asp-for="RequisitionDate" type="date" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="RequisitionBy" class="form-label"></label>
+        <input asp-for="RequisitionBy" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="RequiredItems" class="form-label"></label>
+        <input asp-for="RequiredItems" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" class="form-control">
+            <option value="Done">Done</option>
+            <option value="Hold">Hold</option>
+            <option value="Closed">Closed</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CompletedDate" class="form-label"></label>
+        <input asp-for="CompletedDate" type="date" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Remarks" class="form-label"></label>
+        <textarea asp-for="Remarks" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>

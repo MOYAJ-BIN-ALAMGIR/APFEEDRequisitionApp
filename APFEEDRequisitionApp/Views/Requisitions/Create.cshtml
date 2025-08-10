@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Data Input";
+}
+<h2>Data Input</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label>Reference No</label>
+        <input class="form-control" name="ReferenceNo" value="@ViewBag.NextReferenceNo" />
+    </div>
+    <div class="form-group">
+        <label>Requisition Date</label>
+        <input class="form-control" type="date" name="RequisitionDate" />
+    </div>
+    <div class="form-group">
+        <label>Requisition By</label>
+        <input class="form-control" name="RequisitionBy" />
+    </div>
+    <div class="form-group">
+        <label>Required Items</label>
+        <textarea class="form-control" name="RequiredItems"></textarea>
+    </div>
+    <div class="form-group">
+        <label>Status</label>
+        <select class="form-control" name="Status">
+            <option>Done</option>
+            <option>Hold</option>
+            <option>Closed</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Completed Date</label>
+        <input class="form-control" type="date" name="CompletedDate" />
+    </div>
+    <div class="form-group">
+        <label>Remarks</label>
+        <textarea class="form-control" name="Remarks"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+</form>
