@@ -16,8 +16,9 @@
 
     <div class="mb-3">
         <label asp-for="RequisitionDate" class="form-label"></label>
-        <input asp-for="RequisitionDate" type="date" class="form-control" />
+        <input asp-for="RequisitionDate" class="form-control" type="date" />
     </div>
+
 
     <div class="mb-3">
         <label asp-for="RequisitionBy" class="form-label"></label>
@@ -40,7 +41,7 @@
 
     <div class="mb-3">
         <label asp-for="CompletedDate" class="form-label"></label>
-        <input asp-for="CompletedDate" type="date" class="form-control" />
+        <input asp-for="CompletedDate" class="form-control" type="date" />
     </div>
 
     <div class="mb-3">
@@ -50,3 +51,13 @@
 
     <button type="submit" class="btn btn-primary">Update</button>
 </form>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+@section Scripts {
+    <script>
+        $('.datepicker').datepicker({
+            format: 'dd/mm/yyyy',
+            autoclose: true
+        });
+    </script>
+}

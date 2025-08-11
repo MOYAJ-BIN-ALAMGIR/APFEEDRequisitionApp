@@ -27,7 +27,7 @@
                             <a class="nav-link text-dark" asp-controller="Requisitions" asp-action="Create">Data Input</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Requisitions" asp-action="Edit">Data Update</a>
+                            <a class="nav-link text-dark" asp-controller="Requisitions" asp-action="Update">Data Update</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Requisitions" asp-action="Export">Export</a>
@@ -54,5 +54,8 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js"></script>
+
 </body>
 </html>

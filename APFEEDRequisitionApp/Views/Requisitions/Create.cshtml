@@ -3,6 +3,13 @@
 }
 <h2>Data Input</h2>
 
+@if(ViewBag.Message != null)
+{
+    <div class= "alert alert-success" role="alert">
+        @ViewBag.Message
+    </div>
+}
+
 <form asp-action="Create" method="post">
     <div class="form-group">
         <label>Reference No</label>
@@ -10,7 +17,8 @@
     </div>
     <div class="form-group">
         <label>Requisition Date</label>
-        <input class="form-control" type="date" name="RequisitionDate" />
+        <input class="form-control datepicker" name="RequisitionDate" placeholder="dd/mm/yyyy" />
+
     </div>
     <div class="form-group">
         <label>Requisition By</label>
@@ -30,7 +38,8 @@
     </div>
     <div class="form-group">
         <label>Completed Date</label>
-        <input class="form-control" type="date" name="CompletedDate" />
+        <input class="form-control datepicker" name="CompletedDate" placeholder="dd/mm/yyyy" />
+
     </div>
     <div class="form-group">
         <label>Remarks</label>
@@ -39,3 +48,15 @@
 
     <button type="submit" class="btn btn-success">Save</button>
 </form>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+
+@section Scripts {
+    <script>
+        $('.datepicker').datepicker({
+            format: 'dd/mm/yyyy',
+            autoclose: true
+        });
+    </script>
+}

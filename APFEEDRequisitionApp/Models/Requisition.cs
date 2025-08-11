@@ -11,9 +11,10 @@ namespace APFEEDRequisitionApp.Models
         [StringLength(50)]
         public string ReferenceNo { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
         [DataType(DataType.Date)]
         public DateTime RequisitionDate { get; set; }
-
+       
         [Required]
         [StringLength(100)]
         public string RequisitionBy { get; set; }
@@ -24,9 +25,10 @@ namespace APFEEDRequisitionApp.Models
         [StringLength(50)]
         public string Status { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
         [DataType(DataType.Date)]
         public DateTime? CompletedDate { get; set; }
-
+        
         public string Remarks { get; set; }
     }
 }

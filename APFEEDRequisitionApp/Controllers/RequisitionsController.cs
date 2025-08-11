@@ -18,7 +18,7 @@ namespace APFEEDRequisitionApp.Controllers
             _context = context;
         }
 
-        public IActionResult Index(string referenceNo, DateTime? from, DateTime? to, string status, string item)
+        public IActionResult Index(string referenceNo, string from, string to, string status, string item)
         {
             var query = _context.Requisitions.AsQueryable();
 
@@ -31,24 +31,34 @@ namespace APFEEDRequisitionApp.Controllers
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(r => r.Status == status);
 
-            if (from.HasValue)
-                query = query.Where(r => r.RequisitionDate >= from.Value);
+            // Parse dates in dd/MM/yyyy format
+            if (!string.IsNullOrEmpty(from) && DateTime.TryParseExact(from, "dd/MM/yyyy",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime fromDate))
+            {
+                query = query.Where(r => r.RequisitionDate >= fromDate);
+            }
 
-            if (to.HasValue)
-                query = query.Where(r => r.RequisitionDate <= to.Value);
+            if (!string.IsNullOrEmpty(to) && DateTime.TryParseExact(to, "dd/MM/yyyy",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime toDate))
+            {
+                query = query.Where(r => r.RequisitionDate <= toDate);
+            }
 
             var vm = new RequisitionIndexViewModel
             {
                 ReferenceNo = referenceNo ?? "",
                 Item = item ?? "",
-                From = from?.ToString("yyyy-MM-dd") ?? "",
-                To = to?.ToString("yyyy-MM-dd") ?? "",
+                From = from ?? "",
+                To = to ?? "",
                 Status = status ?? "",
-                Results = query.OrderByDescending(r => r.Id).ToList()
+                Results = query.OrderBy(r => r.Id).ToList()
             };
 
             return View(vm);
         }
+
 
         public IActionResult Create()
         {
@@ -61,34 +71,69 @@ namespace APFEEDRequisitionApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(Requisition model)
         {
+            // Manually parse dates from dd/MM/yyyy format
+            if (DateTime.TryParseExact(Request.Form["RequisitionDate"], "dd/MM/yyyy",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime reqDate))
+            {
+                model.RequisitionDate = reqDate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Request.Form["CompletedDate"]) &&
+                DateTime.TryParseExact(Request.Form["CompletedDate"], "dd/MM/yyyy",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime compDate))
+            {
+                model.CompletedDate = compDate;
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Requisitions.Add(model);
                 _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
+
+                // Prepare for next entry
+                string nextRef = GenerateNextReferenceNo();
+                ViewBag.NextReferenceNo = nextRef;
+                ViewBag.Message = "✅ Record saved successfully!";
+
+                ModelState.Clear(); // clears previous values so form is empty
+                return View();
             }
+
+            // If validation fails, keep the same Reference No
+            ViewBag.NextReferenceNo = model.ReferenceNo;
             return View(model);
         }
 
+
         private string GenerateNextReferenceNo()
         {
-            string prefix = "APFM/PRO/25-";
+            string prefix = "APFM/PRO/";
+            string yearPart = DateTime.Now.ToString("yy") + "-"; // e.g. "25-"
+
+            // Filter only requisitions for current year prefix, e.g. APFM/PRO/25-
             var lastReq = _context.Requisitions
+                .Where(r => r.ReferenceNo.StartsWith(prefix + yearPart))
                 .OrderByDescending(r => r.Id)
                 .FirstOrDefault();
 
             int nextNumber = 1;
 
-            if (lastReq != null && lastReq.ReferenceNo.StartsWith(prefix))
+            if (lastReq != null)
             {
-                var numPart = lastReq.ReferenceNo.Substring(prefix.Length);
+                // Extract the serial number after the year part
+                string numPart = lastReq.ReferenceNo.Substring((prefix + yearPart).Length);
+
                 if (int.TryParse(numPart, out int lastNumber))
                 {
                     nextNumber = lastNumber + 1;
                 }
             }
-            return $"{prefix}{nextNumber:D4}";
+
+            return $"{prefix}{yearPart}{nextNumber:D4}"; // e.g. APFM/PRO/25-0001
         }
+
 
         public IActionResult Edit(int? id)
         {
@@ -105,6 +150,7 @@ namespace APFEEDRequisitionApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Requisition requisition)
         {
+            
             if (id != requisition.Id)
                 return NotFound();
 
@@ -149,7 +195,7 @@ namespace APFEEDRequisitionApp.Controllers
 
         public IActionResult ExportExcel()
         {
-            var data = _context.Requisitions.OrderByDescending(r => r.Id).ToList();
+            var data = _context.Requisitions.OrderBy(r => r.Id).ToList();
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Requisitions");
             worksheet.Cell(1, 1).Value = "SI No";
@@ -166,11 +212,11 @@ namespace APFEEDRequisitionApp.Controllers
             {
                 worksheet.Cell(row, 1).Value = r.Id;
                 worksheet.Cell(row, 2).Value = r.ReferenceNo;
-                worksheet.Cell(row, 3).Value = r.RequisitionDate.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 3).Value = r.RequisitionDate.ToString("dd/MM/yyyy");
                 worksheet.Cell(row, 4).Value = r.RequisitionBy;
                 worksheet.Cell(row, 5).Value = r.RequiredItems;
                 worksheet.Cell(row, 6).Value = r.Status;
-                worksheet.Cell(row, 7).Value = r.CompletedDate?.ToString("yyyy-MM-dd") ?? "";
+                worksheet.Cell(row, 7).Value = r.CompletedDate?.ToString("dd/MM/yyyy") ?? "";
                 worksheet.Cell(row, 8).Value = r.Remarks;
                 row++;
             }
@@ -184,7 +230,7 @@ namespace APFEEDRequisitionApp.Controllers
 
         public IActionResult ExportPdf()
         {
-            var data = _context.Requisitions.OrderByDescending(r => r.Id).ToList();
+            var data = _context.Requisitions.OrderBy(r => r.Id).ToList();
 
             using var ms = new MemoryStream();
             var writer = new PdfWriter(ms);
@@ -203,11 +249,11 @@ namespace APFEEDRequisitionApp.Controllers
             {
                 table.AddCell(r.Id.ToString());
                 table.AddCell(r.ReferenceNo);
-                table.AddCell(r.RequisitionDate.ToString("yyyy-MM-dd"));
+                table.AddCell(r.RequisitionDate.ToString("dd/MM/yyyy"));
                 table.AddCell(r.RequisitionBy);
                 table.AddCell(r.RequiredItems);
                 table.AddCell(r.Status);
-                table.AddCell(r.CompletedDate?.ToString("yyyy-MM-dd") ?? "");
+                table.AddCell(r.CompletedDate?.ToString("dd/MM/yyyy") ?? "");
                 table.AddCell(r.Remarks);
             }
 
@@ -215,6 +261,38 @@ namespace APFEEDRequisitionApp.Controllers
             document.Close();
 
             return File(ms.ToArray(), "application/pdf", "Requisitions.pdf");
+        }
+
+        public IActionResult Update(string referenceNo, DateTime? from, DateTime? to, string status, string item)
+        {
+            var query = _context.Requisitions.AsQueryable();
+
+            if (!string.IsNullOrEmpty(referenceNo))
+                query = query.Where(r => r.ReferenceNo.Contains(referenceNo));
+
+            if (!string.IsNullOrEmpty(item))
+                query = query.Where(r => r.RequiredItems.Contains(item));
+
+            if (!string.IsNullOrEmpty(status))
+                query = query.Where(r => r.Status == status);
+
+            if (from.HasValue)
+                query = query.Where(r => r.RequisitionDate >= from.Value);
+
+            if (to.HasValue)
+                query = query.Where(r => r.RequisitionDate <= to.Value);
+
+            var vm = new RequisitionIndexViewModel
+            {
+                ReferenceNo = referenceNo ?? "",
+                Item = item ?? "",
+                From = from?.ToString("dd/MM/yyyy") ?? "",
+                To = to?.ToString("dd/MM/yyyy") ?? "",
+                Status = status ?? "",
+                Results = query.OrderBy(r => r.Id).ToList()
+            };
+
+            return View(vm);
         }
     }
 }

@@ -13,10 +13,10 @@
             <input class="form-control" name="item" placeholder="Item Name" value="@Model.Item" />
         </div>
         <div class="col-md-2">
-            <input class="form-control datepicker" type="text" name="from" value="@Model.From" placeholder="dd/mm/yyyy" autocomplete="off" />
+            <input class="form-control" type="date" name="from" value="@Model.From" />
         </div>
         <div class="col-md-2">
-            <input class="form-control datepicker" type="text" name="to" value="@Model.To" placeholder="dd/mm/yyyy" autocomplete="off" />
+            <input class="form-control" type="date" name="to" value="@Model.To" />
         </div>
         <div class="col-md-2">
             <select class="form-control" name="status">
@@ -33,7 +33,7 @@
 </form>
 
 
-<table class="table table-bordered table-striped text-center">
+<table class="table table-bordered table-striped">
     <thead>
         <tr>
             <th>SI No</th>
@@ -44,7 +44,7 @@
             <th>Status</th>
             <th>Completed Date</th>
             <th>Remarks</th>
-            @* <th>Actions</th> *@
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -59,10 +59,10 @@
                 <td>@req.Status</td>
                 <td>@(req.CompletedDate?.ToString("dd/MM/yyyy") ?? "-")</td>
                 <td>@req.Remarks</td>
-                @* <td>
+                <td>
                     <a asp-action="Edit" asp-route-id="@req.Id" class="btn btn-sm btn-warning">Edit</a>
                     <a asp-action="Delete" asp-route-id="@req.Id" class="btn btn-sm btn-danger">Delete</a>
-                </td> *@
+                </td>
 
             </tr>
         }
@@ -82,13 +82,6 @@
                 "pageLength": 10,
                 "order": [[0, "desc"]]
             });
-
-            // Datepicker
-        $('.datepicker').datepicker({
-            format: 'dd/mm/yyyy',
-            autoclose: true,
-            todayHighlight: true
-        });
         });
     </script>
 }
