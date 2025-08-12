@@ -70,22 +70,7 @@ namespace APFEEDRequisitionApp.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Requisition model)
-        {
-            // Manually parse dates from dd/MM/yyyy format
-            if (DateTime.TryParseExact(Request.Form["RequisitionDate"], "dd/MM/yyyy",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out DateTime reqDate))
-            {
-                model.RequisitionDate = reqDate;
-            }
-
-            if (!string.IsNullOrWhiteSpace(Request.Form["CompletedDate"]) &&
-                DateTime.TryParseExact(Request.Form["CompletedDate"], "dd/MM/yyyy",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out DateTime compDate))
-            {
-                model.CompletedDate = compDate;
-            }
+        {            
 
             if (ModelState.IsValid)
             {
