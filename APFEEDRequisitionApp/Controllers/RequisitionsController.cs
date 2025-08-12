@@ -89,19 +89,29 @@ namespace APFEEDRequisitionApp.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.Requisitions.Add(model);
-                _context.SaveChanges();
+                try
+                {
+                    _context.Requisitions.Add(model);
+                    _context.SaveChanges();
 
-                // Prepare for next entry
-                string nextRef = GenerateNextReferenceNo();
-                ViewBag.NextReferenceNo = nextRef;
-                ViewBag.Message = "✅ Record saved successfully!";
+                    // Prepare for next entry
+                    string nextRef = GenerateNextReferenceNo();
+                    ViewBag.NextReferenceNo = nextRef;
+                    ViewBag.Message = "✅ Record saved successfully!";
 
-                ModelState.Clear(); // clears previous values so form is empty
-                return View();
+                    ModelState.Clear(); // clears previous values so form is empty
+                    return View();
+                }
+                catch (Exception)
+                {
+                    ViewBag.ErrorMessage = "❌ An error occurred while saving. Please try again.";
+                    ViewBag.NextReferenceNo = model.ReferenceNo; // keep the same reference
+                    return View(model);
+                }
             }
 
-            // If validation fails, keep the same Reference No
+            // Validation failed
+            ViewBag.ErrorMessage = "⚠ Please correct the Invalid data. Please check your input";
             ViewBag.NextReferenceNo = model.ReferenceNo;
             return View(model);
         }
@@ -156,10 +166,24 @@ namespace APFEEDRequisitionApp.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.Update(requisition);
-                _context.SaveChanges();
+                try
+                {
+                    _context.Update(requisition);
+                    int result = _context.SaveChanges();
+
+                    if (result > 0)
+                        TempData["SuccessMessage"] = "✅ Record updated successfully!";
+                    else
+                        TempData["ErrorMessage"] = "⚠ No changes were made.";
+                }
+                catch
+                {
+                    TempData["ErrorMessage"] = "❌ An error occurred while updating.";
+                }
+
                 return RedirectToAction(nameof(Index));
             }
+            TempData["ErrorMessage"] = "❌ Invalid data. Please check your input.";
             return View(requisition);
         }
 
@@ -263,36 +287,36 @@ namespace APFEEDRequisitionApp.Controllers
             return File(ms.ToArray(), "application/pdf", "Requisitions.pdf");
         }
 
-        public IActionResult Update(string referenceNo, DateTime? from, DateTime? to, string status, string item)
-        {
-            var query = _context.Requisitions.AsQueryable();
+        //public IActionResult Update(string referenceNo, DateTime? from, DateTime? to, string status, string item)
+        //{
+        //    var query = _context.Requisitions.AsQueryable();
 
-            if (!string.IsNullOrEmpty(referenceNo))
-                query = query.Where(r => r.ReferenceNo.Contains(referenceNo));
+        //    if (!string.IsNullOrEmpty(referenceNo))
+        //        query = query.Where(r => r.ReferenceNo.Contains(referenceNo));
 
-            if (!string.IsNullOrEmpty(item))
-                query = query.Where(r => r.RequiredItems.Contains(item));
+        //    if (!string.IsNullOrEmpty(item))
+        //        query = query.Where(r => r.RequiredItems.Contains(item));
 
-            if (!string.IsNullOrEmpty(status))
-                query = query.Where(r => r.Status == status);
+        //    if (!string.IsNullOrEmpty(status))
+        //        query = query.Where(r => r.Status == status);
 
-            if (from.HasValue)
-                query = query.Where(r => r.RequisitionDate >= from.Value);
+        //    if (from.HasValue)
+        //        query = query.Where(r => r.RequisitionDate >= from.Value);
 
-            if (to.HasValue)
-                query = query.Where(r => r.RequisitionDate <= to.Value);
+        //    if (to.HasValue)
+        //        query = query.Where(r => r.RequisitionDate <= to.Value);
 
-            var vm = new RequisitionIndexViewModel
-            {
-                ReferenceNo = referenceNo ?? "",
-                Item = item ?? "",
-                From = from?.ToString("dd/MM/yyyy") ?? "",
-                To = to?.ToString("dd/MM/yyyy") ?? "",
-                Status = status ?? "",
-                Results = query.OrderBy(r => r.Id).ToList()
-            };
+        //    var vm = new RequisitionIndexViewModel
+        //    {
+        //        ReferenceNo = referenceNo ?? "",
+        //        Item = item ?? "",
+        //        From = from?.ToString("dd/MM/yyyy") ?? "",
+        //        To = to?.ToString("dd/MM/yyyy") ?? "",
+        //        Status = status ?? "",
+        //        Results = query.OrderBy(r => r.Id).ToList()
+        //    };
 
-            return View(vm);
-        }
+        //    return View(vm);
+        //}
     }
 }

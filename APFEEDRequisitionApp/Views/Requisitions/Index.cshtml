@@ -1,94 +1,115 @@
 ﻿@model APFEEDRequisitionApp.Models.RequisitionIndexViewModel
 @{
-    ViewData["Title"] = "All Data";
+	ViewData["Title"] = "All Data";
 }
 <h2>All Data</h2>
 
 <form method="get" asp-action="Index" class="mb-3">
-    <div class="row">
-        <div class="col-md-2">
-            <input class="form-control" name="referenceNo" placeholder="Reference No" value="@Model.ReferenceNo" />
-        </div>
-        <div class="col-md-2">
-            <input class="form-control" name="item" placeholder="Item Name" value="@Model.Item" />
-        </div>
-        <div class="col-md-2">
-            <input class="form-control datepicker" type="text" name="from" value="@Model.From" placeholder="dd/mm/yyyy" autocomplete="off" />
-        </div>
-        <div class="col-md-2">
-            <input class="form-control datepicker" type="text" name="to" value="@Model.To" placeholder="dd/mm/yyyy" autocomplete="off" />
-        </div>
-        <div class="col-md-2">
-            <select class="form-control" name="status">
-                <option value="">All Status</option>
-                <option value="Done" selected="@(Model.Status == "Done")">Done</option>
-                <option value="Hold" selected="@(Model.Status == "Hold")">Hold</option>
-                <option value="Closed" selected="@(Model.Status == "Closed")">Closed</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button class="btn btn-primary w-100">Search</button>
-        </div>
-    </div>
+	<div class="row">
+		<div class="col-md-2">
+			<input class="form-control" name="referenceNo" placeholder="Reference No" value="@Model.ReferenceNo" />
+		</div>
+		<div class="col-md-2">
+			<input class="form-control" name="item" placeholder="Item Name" value="@Model.Item" />
+		</div>
+		<div class="col-md-2">
+			<input class="form-control datepicker" type="text" name="from" value="@Model.From" placeholder="Requesition dd/mm/yyyy" autocomplete="off" />
+		</div>
+		<div class="col-md-2">
+			<input class="form-control datepicker" type="text" name="to" value="@Model.To" placeholder="Completed dd/mm/yyyy" autocomplete="off" />
+		</div>
+		<div class="col-md-2">
+			<select class="form-control" name="status">
+				<option value="">All Status</option>
+				<option value="Done" selected="@(Model.Status == "Done")">Done</option>
+				<option value="Hold" selected="@(Model.Status == "Hold")">Hold</option>
+				<option value="Closed" selected="@(Model.Status == "Closed")">Closed</option>
+			</select>
+		</div>
+		<div class="col-md-2">
+			<button class="btn btn-primary w-100">Search</button>
+		</div>
+	</div>
 </form>
 
+<div class="mb-3 d-flex gap-2">
+	<a asp-action="Create" class="btn btn-success">New Data</a>
+
+	<form method="post" asp-action="ExportExcel" class="d-inline">
+		<button type="submit" class="btn btn-primary">Export to Excel</button>
+	</form>
+
+	@* <form method="post" asp-action="ExportPdf" class="d-inline">
+        <button type="submit" class="btn btn-danger">Export to PDF</button>
+    </form> *@
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+	<div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+	<div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
 
 <table class="table table-bordered table-striped text-center">
-    <thead>
-        <tr>
-            <th>SI No</th>
-            <th>Reference No</th>
-            <th>Requisition Date</th>
-            <th>Requisition By</th>
-            <th>Required Items</th>
-            <th>Status</th>
-            <th>Completed Date</th>
-            <th>Remarks</th>
-            @* <th>Actions</th> *@
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var req in Model.Results)
-        {
-            <tr>
-                <td>@req.Id</td>
-                <td>@req.ReferenceNo</td>
-                <td>@req.RequisitionDate.ToString("dd/MM/yyyy")</td>
-                <td>@req.RequisitionBy</td>
-                <td>@req.RequiredItems</td>
-                <td>@req.Status</td>
-                <td>@(req.CompletedDate?.ToString("dd/MM/yyyy") ?? "-")</td>
-                <td>@req.Remarks</td>
-                @* <td>
-                    <a asp-action="Edit" asp-route-id="@req.Id" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@req.Id" class="btn btn-sm btn-danger">Delete</a>
-                </td> *@
+	<thead class="align-middle text-nowrap">
+		<tr>
+			<th>SI No</th>
+			<th>Reference No</th>
+			<th>Requisition Date</th>
+			<th>Requisition By</th>
+			<th>Required Items</th>
+			<th>Status</th>
+			<th>Completed Date</th>
+			<th>Remarks</th>
+			<th>Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var req in Model.Results)
+		{
+			<tr class="text-nowrap">
+				<td>@req.Id</td>
+				<td>@req.ReferenceNo</td>
+				<td>@req.RequisitionDate.ToString("dd/MM/yyyy")</td>
+				<td>@req.RequisitionBy</td>
+				<td>@req.RequiredItems</td>
+				<td>@req.Status</td>
+				<td>@(req.CompletedDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+				<td class="text-wrap">@req.Remarks</td>
+				<td>
+					<a asp-action="Edit" asp-route-id="@req.Id" class="btn btn-sm btn-warning">Edit</a>
+					<a asp-action="Delete" asp-route-id="@req.Id" class="btn btn-sm btn-danger">Delete</a>
+				</td>
 
-            </tr>
-        }
-    </tbody>
+			</tr>
+		}
+	</tbody>
 </table>
 
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" />
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" />
 
-    <script>
-        $(document).ready(function () {
-            $('#dataTable').DataTable({
-                "pageLength": 10,
-                "order": [[0, "desc"]]
-            });
+	<script>
+		$(document).ready(function () {
+			$('#dataTable').DataTable({
+				"pageLength": 10,
+				"order": [[0, "desc"]]
+			});
 
-            // Datepicker
-        $('.datepicker').datepicker({
-            format: 'dd/mm/yyyy',
-            autoclose: true,
-            todayHighlight: true
-        });
-        });
-    </script>
+			// Datepicker
+		$('.datepicker').datepicker({
+			format: 'dd/mm/yyyy',
+			autoclose: true,
+			todayHighlight: true
+		});
+		});
+	</script>
 }
