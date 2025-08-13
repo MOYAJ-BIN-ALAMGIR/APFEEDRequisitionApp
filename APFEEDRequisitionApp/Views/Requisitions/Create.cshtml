@@ -12,23 +12,32 @@
 {
     <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
 }
+
+<form asp-action="UploadExcel" enctype="multipart/form-data" method="post">
+    <input type="file" name="excelFile" />
+    <button type="submit">Upload</button>
+</form>
+
 <form asp-action="Create" method="post">
     <div class="form-group">
         <label>Reference No</label>
         <input class="form-control" name="ReferenceNo" value="@ViewBag.NextReferenceNo" />
+        <span asp-validation-for="ReferenceNo" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label>Requisition Date</label>
         <input asp-for="RequisitionDate" class="form-control" type="date"/>
-
+        <span asp-validation-for="RequisitionDate" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label>Requisition By</label>
         <input class="form-control" name="RequisitionBy" />
+        <span asp-validation-for="RequisitionBy" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label>Required Items</label>
         <textarea class="form-control" name="RequiredItems"></textarea>
+        <span asp-validation-for="RequiredItems" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label>Status</label>
@@ -36,16 +45,19 @@
             <option>Done</option>
             <option>Hold</option>
             <option>Closed</option>
+            <option>Cancled</option>
+            <option>Pending</option>
         </select>
     </div>
     <div class="form-group">
         <label>Completed Date</label>
         <input asp-for="CompletedDate" class="form-control" type="date" />
-
+        
     </div>
     <div class="form-group">
         <label>Remarks</label>
         <textarea class="form-control" name="Remarks"></textarea>
+        <span asp-validation-for="Remarks" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-success">Save</button>

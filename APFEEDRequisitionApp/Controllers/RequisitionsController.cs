@@ -1,12 +1,13 @@
 ﻿using APFEEDRequisitionApp.Models;
 using APFEEDRequisitionApp.Models.Data;
-using iText.Kernel.Pdf;
-using Microsoft.AspNetCore.Mvc;
-using System.IO;
 using ClosedXML.Excel;  
+using iText.Kernel.Pdf;
 using iText.Kernel.Pdf; 
 using iText.Layout;
 using iText.Layout.Element;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IO;
 namespace APFEEDRequisitionApp.Controllers
 {
     public class RequisitionsController : Controller
@@ -22,6 +23,7 @@ namespace APFEEDRequisitionApp.Controllers
         {
             var query = _context.Requisitions.AsQueryable();
 
+            // Apply filters
             if (!string.IsNullOrEmpty(referenceNo))
                 query = query.Where(r => r.ReferenceNo.Contains(referenceNo));
 
@@ -31,7 +33,6 @@ namespace APFEEDRequisitionApp.Controllers
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(r => r.Status == status);
 
-            // Parse dates in dd/MM/yyyy format
             if (!string.IsNullOrEmpty(from) && DateTime.TryParseExact(from, "dd/MM/yyyy",
                 System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.None, out DateTime fromDate))
@@ -46,6 +47,24 @@ namespace APFEEDRequisitionApp.Controllers
                 query = query.Where(r => r.RequisitionDate <= toDate);
             }
 
+            // Order by Id (or any preferred order)
+            var data = query.OrderBy(r => r.Id).ToList();
+
+            // Assign SI No dynamically
+            var dataWithSI = data.Select((r, index) => new
+            {
+                SI_No = index + 1, // starts from 1
+                r.Id,
+                r.ReferenceNo,
+                r.RequisitionDate,
+                r.RequisitionBy,
+                r.RequiredItems,
+                r.Status,
+                r.CompletedDate,
+                r.Remarks
+            }).ToList();
+
+            // Prepare ViewModel
             var vm = new RequisitionIndexViewModel
             {
                 ReferenceNo = referenceNo ?? "",
@@ -53,11 +72,26 @@ namespace APFEEDRequisitionApp.Controllers
                 From = from ?? "",
                 To = to ?? "",
                 Status = status ?? "",
-                Results = query.OrderBy(r => r.Id).ToList()
+                Results = dataWithSI
+                    .Select(r => new Requisition
+                    {
+                        Id = r.Id, // for edit/delete links
+                        ReferenceNo = r.ReferenceNo,
+                        RequisitionDate = r.RequisitionDate,
+                        RequisitionBy = r.RequisitionBy,
+                        RequiredItems = r.RequiredItems,
+                        Status = r.Status,
+                        CompletedDate = r.CompletedDate,
+                        Remarks = r.Remarks
+                    }).ToList()
             };
+
+            // Pass SI No to the view through ViewBag
+            ViewBag.SINoMap = dataWithSI.ToDictionary(x => x.Id, x => x.SI_No);
 
             return View(vm);
         }
+
 
 
         public IActionResult Create()
@@ -69,15 +103,20 @@ namespace APFEEDRequisitionApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Requisition model)
-        {            
+        public async Task<IActionResult> Create(Requisition model)
+        {
+
+            if (await _context.Requisitions.AnyAsync(r => r.ReferenceNo == model.ReferenceNo))
+            {
+                ModelState.AddModelError("ReferenceNumber", "Reference number already exists.");
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Requisitions.Add(model);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     // Prepare for next entry
                     string nextRef = GenerateNextReferenceNo();
@@ -143,18 +182,22 @@ namespace APFEEDRequisitionApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Requisition requisition)
+        public async Task<IActionResult> Edit(int id, Requisition requisition)
         {
             
             if (id != requisition.Id)
                 return NotFound();
+            if (await _context.Requisitions.AnyAsync(r => r.ReferenceNo== requisition.ReferenceNo && r.Id != id))
+            {
+                ModelState.AddModelError("ReferenceNo", "Reference number already exists.");
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(requisition);
-                    int result = _context.SaveChanges();
+                    int result = await _context.SaveChangesAsync();
 
                     if (result > 0)
                         TempData["SuccessMessage"] = "✅ Record updated successfully!";
@@ -204,9 +247,27 @@ namespace APFEEDRequisitionApp.Controllers
 
         public IActionResult ExportExcel()
         {
+            // Get data ordered by Id
             var data = _context.Requisitions.OrderBy(r => r.Id).ToList();
+
+            // Assign SI No dynamically
+            var dataWithSI = data.Select((r, index) => new
+            {
+                SI_No = index + 1,
+                r.Id,
+                r.ReferenceNo,
+                r.RequisitionDate,
+                r.RequisitionBy,
+                r.RequiredItems,
+                r.Status,
+                r.CompletedDate,
+                r.Remarks
+            }).ToList();
+
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Requisitions");
+
+            // Headers
             worksheet.Cell(1, 1).Value = "SI No";
             worksheet.Cell(1, 2).Value = "Reference No";
             worksheet.Cell(1, 3).Value = "Requisition Date";
@@ -216,10 +277,11 @@ namespace APFEEDRequisitionApp.Controllers
             worksheet.Cell(1, 7).Value = "Completed Date";
             worksheet.Cell(1, 8).Value = "Remarks";
 
+            // Fill rows
             int row = 2;
-            foreach (var r in data)
+            foreach (var r in dataWithSI)
             {
-                worksheet.Cell(row, 1).Value = r.Id;
+                worksheet.Cell(row, 1).Value = r.SI_No; // use SI No here
                 worksheet.Cell(row, 2).Value = r.ReferenceNo;
                 worksheet.Cell(row, 3).Value = r.RequisitionDate.ToString("dd/MM/yyyy");
                 worksheet.Cell(row, 4).Value = r.RequisitionBy;
@@ -236,6 +298,7 @@ namespace APFEEDRequisitionApp.Controllers
 
             return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Requisitions.xlsx");
         }
+
 
         public IActionResult ExportPdf()
         {
@@ -303,5 +366,68 @@ namespace APFEEDRequisitionApp.Controllers
 
         //    return View(vm);
         //}
+        [HttpPost]
+        public IActionResult UploadExcel(IFormFile excelFile)
+        {
+            if (excelFile != null && excelFile.Length > 0)
+            {
+                using var stream = new MemoryStream();
+                excelFile.CopyTo(stream);
+                using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+                var worksheet = workbook.Worksheet(1); // First sheet
+
+                foreach (var row in worksheet.RangeUsed().RowsUsed().Skip(1)) // Skip header
+                {
+                    var referenceNumber = row.Cell(2).GetValue<string>();
+                    var requisitionBy = row.Cell(4).GetValue<string>();
+                    var requiredItems = row.Cell(5).GetValue<string>();
+                    var status = row.Cell(6).GetValue<string>();
+                    var remarks = row.Cell(8).GetValue<string>();
+
+                    // Safe date parsing
+                    DateTime? requisitionDate = TryParseExcelDate(row.Cell(3));
+                    DateTime? completedDate = TryParseExcelDate(row.Cell(7));
+
+                    // Example save to DB (pseudo-code)
+                    var newItem = new Requisition
+                    {
+                        ReferenceNo = referenceNumber,
+                        RequisitionDate = requisitionDate ?? DateTime.MinValue,
+                        RequisitionBy = requisitionBy,
+                        RequiredItems = requiredItems,
+                        Status = status,
+                        CompletedDate = completedDate ,//?? DateTime.MinValue,
+                        Remarks = remarks
+                    };
+
+                    // _context.YourTable.Add(newItem);
+                     _context.Requisitions.Add(newItem);
+                }
+
+                // _context.SaveChanges();
+                _context.SaveChanges();
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        // Helper method to parse date from Excel cell
+        private DateTime? TryParseExcelDate(ClosedXML.Excel.IXLCell cell)
+        {
+            if (cell.DataType == ClosedXML.Excel.XLDataType.DateTime)
+            {
+                return cell.GetDateTime();
+            }
+            else
+            {
+                // Try parsing text value
+                if (DateTime.TryParse(cell.GetValue<string>(), out var parsedDate))
+                {
+                    return parsedDate;
+                }
+            }
+            return null;
+        }
+
     }
 }

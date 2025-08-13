@@ -22,22 +22,26 @@
     <div class="mb-3">
         <label asp-for="ReferenceNo" class="form-label"></label>
         <input asp-for="ReferenceNo" class="form-control" />
+        <span asp-validation-for="ReferenceNo" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="RequisitionDate" class="form-label"></label>
         <input asp-for="RequisitionDate" class="form-control" type="date" value="@Model.RequisitionDate.ToString("yyyy-MM-dd")" />
+        <span asp-validation-for="RequisitionDate" class="text-danger"></span>
     </div>
 
 
     <div class="mb-3">
         <label asp-for="RequisitionBy" class="form-label"></label>
         <input asp-for="RequisitionBy" class="form-control" />
+        <span asp-validation-for="RequisitionBy" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="RequiredItems" class="form-label"></label>
         <input asp-for="RequiredItems" class="form-control" />
+        <span asp-validation-for="RequiredItems" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
@@ -46,6 +50,8 @@
             <option value="Done">Done</option>
             <option value="Hold">Hold</option>
             <option value="Closed">Closed</option>
+            <option value="Cancled">Cancled</option>
+            <option value="Pending">Pending</option>
         </select>
     </div>
 
@@ -57,6 +63,7 @@
     <div class="mb-3">
         <label asp-for="Remarks" class="form-label"></label>
         <textarea asp-for="Remarks" class="form-control"></textarea>
+        <span asp-validation-for="Remarks" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-primary">Update</button>

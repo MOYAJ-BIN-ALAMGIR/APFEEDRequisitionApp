@@ -72,7 +72,7 @@
 		@foreach (var req in Model.Results)
 		{
 			<tr class="text-nowrap">
-				<td>@req.Id</td>
+				<td>@ViewBag.SINoMap[req.Id]</td>
 				<td>@req.ReferenceNo</td>
 				<td>@req.RequisitionDate.ToString("dd/MM/yyyy")</td>
 				<td>@req.RequisitionBy</td>
