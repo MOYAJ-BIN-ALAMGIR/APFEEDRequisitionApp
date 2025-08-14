@@ -24,6 +24,9 @@
 				<option value="Done" selected="@(Model.Status == "Done")">Done</option>
 				<option value="Hold" selected="@(Model.Status == "Hold")">Hold</option>
 				<option value="Closed" selected="@(Model.Status == "Closed")">Closed</option>
+				<option value="Cancled" selected="@(Model.Status == "Cancled")">Cancled</option>
+				<option value="Pending" selected="@(Model.Status == "Pending")">Pending</option>
+
 			</select>
 		</div>
 		<div class="col-md-2">
@@ -71,7 +74,8 @@
 	<tbody>
 		@foreach (var req in Model.Results)
 		{
-			<tr class="text-nowrap">
+			<tr>
+				@* class="text-nowrap" *@
 				<td>@ViewBag.SINoMap[req.Id]</td>
 				<td>@req.ReferenceNo</td>
 				<td>@req.RequisitionDate.ToString("dd/MM/yyyy")</td>
